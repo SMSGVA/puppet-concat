@@ -31,7 +31,7 @@ class concat::setup {
                       };
     }
 
-    module_dir { "concat": }
+    common::module_dir { "concat": }
 }
 
 # vi:tabstop=4:expandtab:ai

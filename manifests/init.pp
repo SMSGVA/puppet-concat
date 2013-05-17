@@ -104,7 +104,7 @@ define concat($mode = 0644, $owner = "root", $group = "root", $warn = "false", $
         mode  => $mode,
     }
 
-    module_dir { [ "concat/${safe_name}", "concat/${safe_name}/fragments" ]: }
+    common::module_dir { [ "concat/${safe_name}", "concat/${safe_name}/fragments" ]: }
 
     file{
          "${fragdir}/fragments.concat":
