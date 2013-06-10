@@ -81,8 +81,11 @@
 #  - The exec can notified using Exec["concat_/path/to/file"] or Exec["concat_/path/to/directory"]
 #  - The final file can be referened as File["/path/to/file"] or File["concat_/path/to/file"]  
 define concat($mode = 0644, $owner = "root", $group = "root", $warn = "false", $force = "false") {
-    $safe_name = regsubst($name, '/', '_', 'G')
+    $semisafe_name = regsubst($name, ':', '_', 'G')
+    $safe_name = regsubst($semisafe_name, '/', '_', 'G')
     $concatdir = $concat::setup::concatdir
+    $concatfragments = $concat::setup::concatfragments
+    $command   = $concat::setup::command
     $version   = $concat::setup::majorversion
     $sort      = $concat::setup::sort
     $fragdir   = "${concatdir}/${safe_name}"
@@ -128,13 +131,27 @@ define concat($mode = 0644, $owner = "root", $group = "root", $warn = "false", $
     }
 
     exec{"concat_${name}":
-        user      => $owner,
-        group     => $group,
+        user      => $::operatingsystem ? {
+            windows => undef,
+            default => $owner,
+        },
+        group     => $::operatingsystem ? {
+            windows => undef,
+            default => $group,
+        },
         notify    => File[$name],
         subscribe => File[$fragdir],
         alias     => "concat_${fragdir}",
-        require   => [ File["/usr/local/bin/concatfragments.sh"], File[$fragdir], File["${fragdir}/fragments"], File["${fragdir}/fragments.concat"] ],
-        unless    => "/usr/local/bin/concatfragments.sh -o ${fragdir}/${concat_name} -d ${fragdir} -t -s ${sort} ${warnflag} ${forceflag}",
-        command   => "/usr/local/bin/concatfragments.sh -o ${fragdir}/${concat_name} -d ${fragdir} -s ${sort} ${warnflag} ${forceflag}",
+        require   => [ File[$concatfragments], File[$fragdir], File["${fragdir}/fragments"], File["${fragdir}/fragments.concat"] ],
+    }
+    if $::operatingsystem == windows {
+        Exec[ "concat_${name}" ] {
+            command   => "${command} ${concatfragments} -o ${fragdir}/${concat_name} -d ${fragdir} -s ${sort} ${warnflag} ${forceflag}",
+        }
+    } else {
+        Exec[ "concat_${name}" ] {
+            unless    => "${concatfragments} -o ${fragdir}/${concat_name} -d ${fragdir} -t -s ${sort} ${warnflag} ${forceflag}",
+            command   => "${concatfragments} -o ${fragdir}/${concat_name} -d ${fragdir} -s ${sort} ${warnflag} ${forceflag}",
+        }
     }
 }

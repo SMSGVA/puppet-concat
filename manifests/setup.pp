@@ -17,18 +17,38 @@
 #
 # It also copies out the concatfragments.sh file to /usr/local/bin
 class concat::setup {
-    $concatdir = "${module_dir_path}/concat"
+    include common
+    $concatdir = "${common::module_dir_path}/concat"
     $majorversion = regsubst($puppetversion, '^[0-9]+[.]([0-9]+)[.][0-9]+$', '\1')
+    case $::operatingsystem {
+        windows: {
+            $concatfragments = 'c:/programdata/puppetlabs/puppet/concatfragments.rb'
+            $concatfragments_source = $majorversion ? {
+                24      => 'puppet:///concat/concatfragments_win.rb',
+                default => 'puppet:///modules/concat/concatfragments_win.rb',
+            }
+            $concatfragments_owner = "Administrator"
+            $concatfragments_group = 'Administrators'
+            $command = '"C:/Program Files (x86)/Puppet Labs/Puppet/sys/ruby/bin/ruby.exe"'
+        }
+        default: {
+            $concatfragments = '/usr/local/bin/concatfragments.sh'
+            $concatfragments_source = $majorversion ? {
+                24      => 'puppet:///concat/concatfragments.sh',
+                default => 'puppet:///modules/concat/concatfragments.sh',
+            }
+            $concatfragments_owner = 'root'
+            $concatfragments_group = 'root'
+            $command = ''
+        }
+    }
     $sort = "sort"
 
-    file{"/usr/local/bin/concatfragments.sh": 
-            owner  => root,
-            group  => root,
-            mode   => 755,
-            source => $majorversion ? {
-                        24      => "puppet:///concat/concatfragments.sh",
-                        default => "puppet:///modules/concat/concatfragments.sh"
-                      };
+    file{ $concatfragments:
+            owner  => $concatfragments_owner,
+            group  => $concatfragments_group,
+            mode   => 777,
+            source => $concatfragments_source,
     }
 
     common::module_dir { "concat": }

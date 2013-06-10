@@ -102,7 +102,7 @@ fi
 
 cd ${WORKDIR}
 
-if [ ${WARN} = "true" ]; then
+if [ x${WARN} = "xtrue" ]; then
 	echo '# This file is managed by Puppet. DO NOT EDIT.' > "fragments.concat"
 else
 	cat /dev/null > "fragments.concat"

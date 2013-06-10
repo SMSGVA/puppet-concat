@@ -12,7 +12,8 @@
 #   - owner     Owner of the file
 #   - group     Owner of the file
 define concat::fragment($target, $content='', $source='', $order=10, $ensure = "present", $mode = 0644, $owner = root, $group = root) {
-    $safe_target_name = regsubst($target, '/', '_', 'G')
+    $semisafe_target_name = regsubst($target, ':', '_', 'G')
+    $safe_target_name = regsubst($semisafe_target_name, '/', '_', 'G')
     $concatdir = $concat::setup::concatdir
     $fragdir = "${concatdir}/${safe_target_name}"
 
