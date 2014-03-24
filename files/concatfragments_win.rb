@@ -154,10 +154,11 @@ if options[:test] == true
   end
 else
   log.debug "Copying file"
-  if FileUtils.cp("#{options[:workdir]}/fragments.concat", options[:outfile])
+  begin
+    FileUtils.cp("#{options[:workdir]}/fragments.concat", options[:outfile])
     log.debug "File copied"
     exit 0
-  else
+  rescue
     log.debug "Copy failed"
     exit 1
   end
